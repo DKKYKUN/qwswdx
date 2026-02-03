@@ -2,443 +2,226 @@ import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import Swal from "sweetalert2";
 
-// Inisialisasi Supabase client
+/* ===============================
+   SUPABASE CONFIG (LANGSUNG)
+================================ */
 const supabaseUrl = "https://nbyljyhzawxsojgwhyta.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ieWxqeWh6YXd4c29qZ3doeXRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDA5MTE1MCwiZXhwIjoyMDg1NjY3MTUwfQ.AqQECo6zQn0WIsGlRirfIGu_IZd7V3tXqBybibUBI08";
+const supabaseKey =
+  "sb_publishable_gSPdAWI-oxNEHdWYSIyrYw_T0AHYDVE";
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+/* ===============================
+   CUSTOM MODAL
+================================ */
 const CustomModal = ({ isOpen, onClose, children }) => {
-    if (!isOpen) return null;
+  if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 backdrop-blur-xl transition-opacity"
-                onClick={onClose}
-            />
-
-            {/* Modal Content */}
-            <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-md w-full mx-4 transform transition-all">
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                    aria-label="Close modal"
-                >
-                    <i className="bx bx-x text-2xl"></i>
-                </button>
-                {children}
-            </div>
-        </div>
-    );
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div
+        className="absolute inset-0 backdrop-blur-xl"
+        onClick={onClose}
+      />
+      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-md w-full mx-4">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          ✕
+        </button>
+        {children}
+      </div>
+    </div>
+  );
 };
 
+/* ===============================
+   MAIN COMPONENT
+================================ */
 const Testimonials = () => {
-    const [testimonials, setTestimonials] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        content: '',
-        position: ''
-    });
-    const [errors, setErrors] = useState({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  const [testimonials, setTestimonials] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Fetch testimonials dari Supabase saat komponen mount
-    useEffect(() => {
-        const fetchTestimonials = async () => {
-            const { data, error } = await supabase
-                .from('testimonials')
-                .select('*')
-                .order('created_at', { ascending: false });
-            if (error) {
-                console.error('Error fetching testimonials:', error);
-            } else {
-                setTestimonials(data);
-            }
-        };
-        fetchTestimonials();
-    }, []);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    position: "",
+    content: "",
+  });
 
-    // Handle form input changes
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-        // Clear error when user starts typing
-        if (errors[name]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: ''
-            }));
-        }
-    };
+  const [errors, setErrors] = useState({});
 
-    // Validate form
-    const validateForm = () => {
-        const newErrors = {};
+  /* ===============================
+     FETCH DATA
+  ================================ */
+  useEffect(() => {
+    fetchTestimonials();
+  }, []);
 
-        if (!formData.name.trim()) {
-            newErrors.name = 'Name is required';
-        }
+  const fetchTestimonials = async () => {
+    const { data, error } = await supabase
+      .from("testimonials")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-        if (!formData.email.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = 'Invalid email format';
-        }
+    if (!error) setTestimonials(data);
+  };
 
-        if (!formData.content.trim()) {
-            newErrors.content = 'Testimonial is required';
-        } else if (formData.content.trim().length < 10) {
-            newErrors.content = 'Testimonial must be at least 10 characters';
-        }
+  /* ===============================
+     FORM HANDLER
+  ================================ */
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" });
+  };
 
-        if (!formData.position.trim()) {
-            newErrors.position = 'Position is required';
-        }
+  const validate = () => {
+    const err = {};
+    if (!formData.name) err.name = "Nama wajib diisi";
+    if (!formData.email) err.email = "Email wajib diisi";
+    if (!formData.position) err.position = "Posisi wajib diisi";
+    if (!formData.content || formData.content.length < 10)
+      err.content = "Minimal 10 karakter";
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+    setErrors(err);
+    return Object.keys(err).length === 0;
+  };
 
-    // Handle form submission
-    const handleSubmit = async () => {
-        if (!validateForm()) {
-            return;
-        }
+  /* ===============================
+     SUBMIT
+  ================================ */
+  const handleSubmit = async () => {
+    if (!validate()) return;
+    setIsSubmitting(true);
 
-        setIsSubmitting(true);
+    const { error } = await supabase.from("testimonials").insert([
+      {
+        name: formData.name,
+        email: formData.email,
+        position: formData.position,
+        content: formData.content,
+        rating: 5,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          formData.name
+        )}&background=1f2937&color=fff`,
+      },
+    ]);
 
-        // Insert testimonial ke Supabase
-        const { error } = await supabase.from('testimonials').insert([
-            {
-                name: formData.name,
-                email: formData.email,
-                content: formData.content,
-                position: formData.position,
-                rating: 5,
-                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=1f2937&color=fff&size=100`
-            }
-        ]);
+    setIsSubmitting(false);
 
-        if (error) {
-            setIsSubmitting(false);
-            console.error('Error submitting testimonial:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'Gagal Megirim Testimoni AwokAwokAwok...',
-                confirmButtonColor: '#1f2937',
-                customClass: {
-                    popup: 'dark:bg-gray-800 dark:text-white',
-                    title: 'dark:text-white',
-                    content: 'dark:text-white'
-                }
-            });
-            return;
-        }
+    if (error) {
+      Swal.fire("Error", "Gagal mengirim feedback", "error");
+      return;
+    }
 
-        // Refresh testimonials
-        const { data } = await supabase
-            .from('testimonials')
-            .select('*')
-            .order('created_at', { ascending: false });
-        setTestimonials(data || []);
+    Swal.fire("Berhasil", "Feedback terkirim!", "success");
+    setFormData({ name: "", email: "", position: "", content: "" });
+    setIsModalOpen(false);
+    fetchTestimonials();
+  };
 
-        setFormData({ name: '', email: '', content: '', position: '' });
-        setIsModalOpen(false);
-        setIsSubmitting(false);
+  /* ===============================
+     RENDER
+  ================================ */
+  return (
+    <section className="min-h-screen p-6 bg-white dark:bg-gray-800">
+      <h2 className="text-3xl font-bold text-center mb-6 text-gray-800 dark:text-white">
+        Feedback
+      </h2>
 
-        // Show success message
-        Swal.fire({
-            icon: 'Berhasil',
-            title: 'Terima Kasih!',
-            text: 'Testimoni Anda Sudah terkirim!',
-            confirmButtonColor: '#1f2937',
-            customClass: {
-                popup: 'dark:bg-gray-800 dark:text-white',
-                title: 'dark:text-white',
-                content: 'dark:text-white'
-            }
-        });
-    };
-
-    // Render stars
-    const renderStars = (rating) => {
-        return [...Array(5)].map((_, index) => (
-            <i
-                key={index}
-                className={`bx bxs-star text-sm ${index < rating ? 'text-yellow-400' : 'text-gray-300'}`}
-            />
-        ));
-    };
-
-    return (
-        <section
-            id="testimonials"
-            className="pt-20 min-h-screen  overflow-hidden px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800"
-            data-aos-duration="1000"
-            data-aos="fade-down"
+      <div className="max-w-3xl mx-auto mb-6 text-center">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-6 py-2 bg-gray-800 text-white rounded-lg"
         >
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="text-center mb-16" data-aos-delay="600" data-aos="fade-down">
-                    <h2 className="text-5xl md:text-5xl font-bold text-gray-800 dark:text-white mb-4">
-                    Feedback 
-                    </h2>
-                    <p className="text-lg text-gray-800 dark:text-white max-w-2xl mx-auto">
-                        Please fill in your feedback, friend. For email, fill in as in the example, for position, mark (-).
-                    </p>
-                </div>
+          Tambah Feedback
+        </button>
+      </div>
 
-                {/* Testimonial Card */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg mb-10 shadow-lg border border-white dark:border-white max-w-4xl mx-auto" data-aos-delay="600" data-aos="fade-up">
-                    {/* Card Header */}
-                    <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
-                        <h3 className="text-xl font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                            <i className="bx bx-comment-detail text-2xl" />
-                            Feedback
-                        </h3>
-
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="px-6 py-2 bg-gray-800 ml-3 text-white dark:bg-white dark:text-gray-800 rounded-lg font-medium  flex items-center gap-2 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg"
-                            aria-label="Add a new testimonial"
-                        >
-                            <i className="bx bx-plus text-lg" />
-                            Please fill in Feedback
-                        </button>
-                    </div>
-
-                    {/* Card Body (Scrollable) */}
-                    <div className="max-h-[500px] overflow-y-auto scrollbar-hide p-6">
-                        {testimonials.length > 0 ? (
-                            <div className="space-y-6">
-                                {testimonials.map((testimonial, index) => (
-                                    <div
-                                        key={testimonial.id}
-                                        className="bg-white shadow-lg dark:border dark:border-white dark:bg-gray-800 rounded-lg p-4 transition-all duration-300"
-                                        style={{
-                                            animationDelay: `${index * 100}ms`
-                                        }}
-                                    >
-                                        {/* Quote Icon */}
-                                        <div className="mb-2">
-                                            <i className="bx bxs-quote-alt-left text-2xl text-gray-300 dark:text-gray-600" />
-                                        </div>
-
-                                        {/* Content */}
-                                        <p className="text-gray-800 dark:text-white mb-4 leading-relaxed text-sm">
-                                            {testimonial.content}
-                                        </p>
-
-                                        {/* Rating */}
-                                        <div className="flex items-center gap-1 mb-3">
-                                            {renderStars(testimonial.rating)}
-                                        </div>
-
-                                        {/* Author Info */}
-                                        <div className="flex items-center gap-3">
-                                            <img
-                                                src={testimonial.avatar}
-                                                alt={`Avatar of ${testimonial.name}`}
-                                                className="w-10 h-10 rounded-full shadow-lg object-cover ring-2 ring-gray-200 dark:ring-gray-600"
-                                                onError={(e) => {
-                                                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(testimonial.name)}&background=1f2937&color=fff&size=48`;
-                                                }}
-                                            />
-                                            <div>
-                                                <h4 className="font-semibold text-gray-800 dark:text-white text-sm">
-                                                    {testimonial.name}
-                                                </h4>
-                                                <p className="text-xs text-gray-800 dark:text-white">
-                                                    {testimonial.position}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center py-12">
-                                <i className="bx bx-message-dots text-6xl text-gray-300 dark:text-gray-600 mb-4 animate-pulse" />
-                                <p className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
-                                    No Have Feedback in Here!
-                                </p>
-                                <p className="text-sm text-gray-800 dark:text-white max-w-sm mx-auto">
-                                    Penagalaman Pertama Itu penting ygy hehe!
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                </div>
+      <div className="max-w-3xl mx-auto space-y-4">
+        {testimonials.map((t) => (
+          <div
+            key={t.id}
+            className="p-4 border rounded-lg bg-white dark:bg-gray-700"
+          >
+            <p className="mb-2 text-gray-800 dark:text-white">
+              “{t.content}”
+            </p>
+            <div className="flex items-center gap-3">
+              <img
+                src={t.avatar}
+                alt={t.name}
+                className="w-10 h-10 rounded-full"
+              />
+              <div>
+                <p className="font-semibold text-gray-800 dark:text-white">
+                  {t.name}
+                </p>
+                <p className="text-sm text-gray-500">{t.position}</p>
+              </div>
             </div>
+          </div>
+        ))}
+      </div>
 
-            {/* Custom Modal */}
-            <CustomModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                <div className="p-6 sm:p-8">
-                    <div className="text-center mb-8">
-                        <div className="w-12 h-12 bg-gray-800 dark:bg-white rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i className="bx bx-message-dots text-xl text-white dark:text-gray-800" />
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
-                            bagikan umpan balik anda
-                        </h3>
-                        <p className="text-sm text-gray-800 dark:text-white">
-                            Ceritakan Pengalaman Kamu Tentang Web Ini
-                        </p>
-                    </div>
+      {/* MODAL */}
+      <CustomModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <div className="p-6 space-y-4">
+          <input
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Nama"
+            className="w-full p-2 border rounded"
+          />
+          {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
 
-                    <div className="grid gap-4">
-                        {/* Name Input */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-800 dark:text-white mb-1">
-                                Nama Panggilan
-                            </label>
-                            <div className="relative">
-                                <i className="bx bx-id-card absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
-                                        errors.name
-                                            ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                                            : 'border-gray-200 dark:border-gray-700 focus:border-gray-800 focus:ring-gray-800'
-                                    } bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-1 transition-colors`}
-                                    placeholder="Enter your full name"
-                                />
-                            </div>
-                            {errors.name && (
-                                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                    <i className="bx bx-error-circle" />
-                                    {errors.name}
-                                </p>
-                            )}
-                        </div>
+          <input
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="Email"
+            className="w-full p-2 border rounded"
+          />
+          {errors.email && (
+            <p className="text-red-500 text-sm">{errors.email}</p>
+          )}
 
-                        {/* Email Input */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-800 dark:text-white mb-1">
-                                Email:isi asal contoh kyy@gmail.com
-                            </label>
-                            <div className="relative">
-                                <i className="bx bx-envelope absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
-                                        errors.email
-                                            ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                                            : 'border-gray-200 dark:border-gray-700 focus:border-gray-800 focus:ring-gray-800'
-                                    } bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-1 transition-colors`}
-                                    placeholder="name@email.com"
-                                />
-                            </div>
-                            {errors.email && (
-                                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                    <i className="bx bx-error-circle" />
-                                    {errors.email}
-                                </p>
-                            )}
-                        </div>
+          <input
+            name="position"
+            value={formData.position}
+            onChange={handleChange}
+            placeholder="Posisi"
+            className="w-full p-2 border rounded"
+          />
+          {errors.position && (
+            <p className="text-red-500 text-sm">{errors.position}</p>
+          )}
 
-                        {/* Position Input */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-800 dark:text-white mb-1">
-                                Position:isi asal contoh programer
-                            </label>
-                            <div className="relative">
-                                <i className="bx bx-briefcase absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                                <input
-                                    type="text"
-                                    name="position"
-                                    value={formData.position}
-                                    onChange={handleInputChange}
-                                    className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
-                                        errors.position
-                                            ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                                            : 'border-gray-200 dark:border-gray-700 focus:border-gray-800 focus:ring-gray-800'
-                                    } bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-1 transition-colors`}
-                                    placeholder="isi saja."
-                                />
-                            </div>
-                            {errors.position && (
-                                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                    <i className="bx bx-error-circle" />
-                                    {errors.position}
-                                </p>
-                            )}
-                        </div>
+          <textarea
+            name="content"
+            value={formData.content}
+            onChange={handleChange}
+            placeholder="Feedback"
+            className="w-full p-2 border rounded"
+          />
+          {errors.content && (
+            <p className="text-red-500 text-sm">{errors.content}</p>
+          )}
 
-                        {/* Content Textarea */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-800 dark:text-white mb-1">
-                                Umpan balik
-                            </label>
-                            <div className="relative">
-                                <i className="bx bx-message-detail absolute left-3 top-4 text-gray-400" />
-                                <textarea
-                                    name="content"
-                                    value={formData.content}
-                                    onChange={handleInputChange}
-                                    rows="4"
-                                    className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
-                                        errors.content
-                                            ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                                            : 'border-gray-200 dark:border-gray-700 focus:border-gray-800 focus:ring-gray-800'
-                                    } bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-sm focus:outline-none focus:ring-1 transition-colors resize-none`}
-                                    placeholder="Ceritakan pengalaman anda"
-                                />
-                            </div>
-                            {errors.content && (
-                                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                                    <i className="bx bx-error-circle" />
-                                    {errors.content}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Buttons */}
-                        <div className="flex gap-3 pt-4">
-                            <button
-                                type="button"
-                                onClick={() => setIsModalOpen(false)}
-                                className="flex-1 px-6 py-2 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white rounded-lg text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleSubmit}
-                                disabled={isSubmitting}
-                                className="flex-1 px-6 py-2 bg-gray-800 dark:bg-white text-white dark:text-gray-800 rounded-lg text-sm font-medium transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                            >
-                                {isSubmitting ? (
-                                    <span className="flex items-center justify-center gap-2">
-                                        <i className="bx bx-loader-alt animate-spin" />
-                                        Mengirim...
-                                    </span>
-                                ) : (
-                                    <span className="flex items-center justify-center gap-2">
-                                        <i className="bx bx-send" />
-                                        Kirim
-                                    </span>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                    </div>
-                </CustomModal>
-            </section>
-    );
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="w-full py-2 bg-gray-800 text-white rounded"
+          >
+            {isSubmitting ? "Mengirim..." : "Kirim"}
+          </button>
+        </div>
+      </CustomModal>
+    </section>
+  );
 };
 
 export default Testimonials;
