@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 
 // Inisialisasi Supabase client
 const supabaseUrl = "https://nbyljyhzawxsojgwhyta.supabase.co";
-const supabaseKey = "sb_publishable_gSPdAWI-oxNEHdWYSIyrYw_T0AHYDVE";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ieWxqeWh6YXd4c29qZ3doeXRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDA5MTE1MCwiZXhwIjoyMDg1NjY3MTUwfQ.AqQECo6zQn0WIsGlRirfIGu_IZd7V3tXqBybibUBI08";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const CustomModal = ({ isOpen, onClose, children }) => {
